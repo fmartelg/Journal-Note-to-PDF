@@ -5,6 +5,11 @@ Convert all .jnt files in my machine to .pdf bc Windows Journal is deprecated.
 3. Delete .jnt file
 """
 
+# DONE: Provide output file name as argument
+# TODO: Print file from a different folder, copy printed PDF to original location, and delete PDF in working directory.
+# TODO: Function that identifies all jnt files in an input directory
+# TODO: Make sure PDF does not already exist before printing, else the Journal Note prompt to replace will break the program.
+
 ###########
 # Libraries
 ###########
@@ -17,17 +22,16 @@ import subprocess
 ###########
 # Functions
 ###########
-def print_jnt(docPath):
+def print_jnt(inputPath, outputFilename):
     """
-    Input: A string with the absolute path to a jnt file
-    Ouput: A pdf printout of the file, saved in the last location JournalNote sprinted to PDF manually. Set it manually to current directory!!!
+    Inputs: 
+      - A string with the absolute path to a jnt file
+      - A string with the output filename (not path)
+    Ouput: 
+      - A pdf printout of the file, saved in the last location JournalNote sprinted to PDF manually. Need to set it manually to current directory before running for first time.
     """
-    subprocess.run(['powershell.exe', './jnt_to_pdf.ahk', docPath])
-    return docPath
-
-# TODO: Print file from different location, copy PDF to said location, and delete it in working directory.
-# TODO: Function that identifies all jnt files in an input directory
-# TODO: Make sure PDF does not already exist before printing, else the Journal Note prompt to replace will break the program.
+    subprocess.run(['powershell.exe', './jnt_to_pdf.ahk', inputPath, outputFilename])
+    return inputPath
 
 ###########
 # Inputs
@@ -37,4 +41,5 @@ jntPath = "C:\\Users\\Fernando\\Documents\\scripts\\print_journal_notes\\Note1.j
 ###########
 # Outputs
 ###########
-print_jnt(jntPath)
+pdfFilename = Path(jntPath).stem + '-jnt' # Name PDF as "name-jnt.pdf"
+print_jnt(jntPath, pdfFilename)
