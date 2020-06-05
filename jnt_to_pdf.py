@@ -8,9 +8,10 @@ Convert all .jnt files in my machine to .pdf bc Windows Journal is deprecated.
 # DONE: Provide output file name as argument
 # DONE: Print file from a different folder
 # DONE: copy printed PDF to original location
-# TODO: Delete PDF in working directory.
 # TODO: Function that identifies all jnt files in an input directory
-# TODO: Make sure PDF does not already exist before printing, else the Journal Note prompt to replace will break the program.
+# TODO: Make sure PDF does not already exist before printing, else the
+#       Journal Note prompt to replace will break the program.
+# TODO: Delete PDF in working directory.
 
 ###########
 # Libraries
@@ -26,20 +27,26 @@ import subprocess
 # Functions
 ###########
 
+
 def print_jnt(inputPath, outputFilename):
     """
-    Inputs: 
+    Inputs:
       - A string with the absolute path to a jnt file
       - A string with the output filename only (i.e. excluding path)
-    Ouput: 
-      - A pdf printout of the file, saved in the last location JournalNote sprinted to PDF manually. Need to set it manually to current directory before running for first time.
+    Ouput:
+      - A pdf printout of the file, saved in the last location JournalNote 
+        sprinted to PDF manually. Need to set it manually to current directory
+        before running for first time.
     """
-    subprocess.run(['powershell.exe', './jnt_to_pdf.ahk', inputPath, outputFilename])
+    subprocess.run(['powershell.exe', './jnt_to_pdf.ahk',
+                    inputPath, outputFilename])
     return inputPath
+
 
 def move_pdf(sourceFileName, destinationPath):
     """
-    After printing a Journal Note to PDF in the default printer directory, this function copies the PDF to the location of the Journal Note.
+    After printing a Journal Note to PDF in the default printer directory, 
+    this function copies the PDF to the location of the Journal Note.
     Inputs:
       - Name of source file (assumed is located in default printing directory)
       - Destination filepath
@@ -48,7 +55,8 @@ def move_pdf(sourceFileName, destinationPath):
     """
     filename = sourceFileName
     destination = destinationPath
-    shutil.move(filename,destination) 
+    shutil.move(filename, destination)
+
 
 ###########
 # Inputs
