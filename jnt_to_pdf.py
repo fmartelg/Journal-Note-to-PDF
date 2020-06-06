@@ -41,7 +41,7 @@ def print_jnt(inputPath, outputFilename):
     """
     subprocess.run(['powershell.exe', './jnt_to_pdf.ahk',
                     inputPath, outputFilename])
-    return inputPath
+    return inputPath, outputFilename
 
 
 def move_pdf(sourceFileName, destinationPath):
@@ -79,14 +79,18 @@ def find_jnt_paths(rootDirectory):
 ###########
 # Inputs
 ###########
-jntRoot = "C:\\Users\\Fernando\\Documents\\a"
-jntPath = "C:\\Users\\Fernando\\Documents\\a\\Note-a.jnt"
-pdfFilename = Path(jntPath).stem + '-jnt.pdf' # Name PDF as "filename-jnt.pdf"
-pdfDestination = Path(Path(jntPath).parent).joinpath(pdfFilename)
+jntRoot = "C:\\Users\\Fernando\\Documents\\a\\b"
+# pdfDestination = Path(Path(jntPath).parent).joinpath(pdfFilename)
 
 ###########
 # Outputs
 ###########
 jntPathList = find_jnt_paths(jntRoot)
-print_jnt(jntPath, pdfFilename)
-move_pdf(pdfFilename, pdfDestination)
+for i in jntPathList:
+    # Name PDF \"filename-jnt.pdf\"
+    # add double quotes so we can pass filenames with spaces to AHK script
+    pdfFilename = "\"" + Path(i).stem + "-jnt.pdf\""
+    jntPath = "\"" + i + "\""
+    print_jnt(jntPath, pdfFilename)
+
+# move_pdf(pdfFilename, pdfDestination)
