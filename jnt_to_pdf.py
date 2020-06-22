@@ -31,16 +31,14 @@ import subprocess
 
 def find_jnt_paths(rootDirectory):
   """
-  Searches in the root directory and all subdirectories iteratigvely to find
-  all .jnt files.
+  Searches iteratively in the root directory for all .jnt files.
   Inputs:
-    - A root directory
+  - A root directory
   Outputs:
-    - A list of full paths to found Journal Note files. 
+  - A list of full paths to all Journal Note files under root directory. 
   """
   list_jnt_paths = []
-  rootDir = rootDirectory
-  for root, dirs, files in os.walk(rootDir):
+  for root, dirs, files in os.walk(rootDirectory):
     for file in files:
         if file.endswith(".jnt"):
              list_jnt_paths.append(os.path.join(root, file))
@@ -50,17 +48,17 @@ def find_jnt_paths(rootDirectory):
 def print_jnt(inputPath, outputFilename):
     """
     Inputs:
-      - A string with the absolute path to a jnt file
-      - A string with the output filename only (i.e. excluding path)
+    - A string with the absolute path to a jnt file
+    - A string with the output filename only (excluding path)
     Ouput:
-      - A pdf printout of the file, saved in the location where the user
-        last printed from JournalNote to PDF manually.  Assumes it is 
-        the working directory where this oprogram is saved.
+    - A pdf printout of the file, saved in the location where the
+    user last printed from JournalNote to PDF manually.  Assumes it is
+    the working directory where this program is saved.
     """
     # Remove double quotes in outputFilename
     temp = Path(outputFilename.strip('"'))
-    if Path.is_file(temp): # if the file exists in the working directory
-      # Prompt user to delete file
+    # if the file exists in the working directory prompt user to delete file
+    if Path.is_file(temp):
       userInput = input("File " + outputFilename + " already exists. Do you want to delete it? (y/n)")
       if userInput == 'y':
         Path.unlink(temp) # Delete file
@@ -74,17 +72,16 @@ def print_jnt(inputPath, outputFilename):
 
 def move_pdf(sourceFileName, destinationPath):
     """
-    After printing a Journal Note to PDF in the default printer directory, 
-    this function moves the PDF to the location of the Journal Note.
+    Moves the PDF to the location of the Journal Note.  
     Inputs:
-      - Name of printed PDF file located in default printing directory
-      - Destination filepath
+    - Name of printed PDF file located in default printing directory
+    - Destination filepath
     Outputs:
-      - None
+    - None
     """
-    # Check if file already exists in destination path
     fullPath = Path(pdfDestination).joinpath(pdfFilename)
-    if Path.is_file(fullPath): # If file already exists
+    # Check if file already exists in destination path
+    if Path.is_file(fullPath):
       raise SystemExit("A PDF file with the same name already exists in the destination folder. Program will abort.")
     else:
       # Move file
@@ -96,19 +93,23 @@ def move_pdf(sourceFileName, destinationPath):
 ###########
 
 # Enter the root directory that you want to search for journal note files.
-jntRoot = "C:\\Users\\Fernando\\Documents\\a\\b"
-# pdfDestination = Path(Path(jntPath).parent).joinpath(pdfFilename)
+jntRoot = "C:\\Users\\Fernando\\Documents\\a"
+
 
 ###########
 # Outputs
 ###########
 
+# Find all jnt files in the root directory and return them in a list
 jntPathList = find_jnt_paths(jntRoot)
+
+# Loop over the list of jnt file paths
 for i in jntPathList:
-    # Print the .jnt file to pdf in default directory
-    # add double quotes so we can pass paths with spaces to AHK script
+    # Adding double quotes so we can pass paths with spaces to AHK script
     pdfFilename = "\"" + Path(i).stem + "-jnt.pdf\""
     jntPath = "\"" + i + "\""
+
+    # Print the .jnt file to pdf in default directory
     print_jnt(jntPath, pdfFilename)
 
     # Move printed PDF file to location of the source .jnt file.
