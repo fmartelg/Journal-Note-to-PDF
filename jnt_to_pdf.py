@@ -11,8 +11,7 @@ Convert all .jnt files in a directory (including sub directories,etc) to pdf.
 # DONE: Function that identifies all jnt files in an input directory
 # DONE: Make sure PDF does not already exist before printing, else the
 #       Journal Note prompt to replace will break the program.
-# TODO: Check that there is a PDF version of each jnt in each directory
-# TODO: Delete PDF in working directory.
+# TODO: Document handle function.
 # TODO: Remove superfluos libraries
 
 ###########
@@ -21,9 +20,11 @@ Convert all .jnt files in a directory (including sub directories,etc) to pdf.
 
 # from ahk import AHK # ahk run does not allow for passing args
 import os
+import time
 import shutil
 from pathlib import Path
 import subprocess
+import psutil
 
 ###########
 # Functions
@@ -79,14 +80,50 @@ def move_pdf(sourceFileName, destinationPath):
     Outputs:
     - None
     """
-    fullPath = Path(pdfDestination).joinpath(pdfFilename)
+    # There are two latencies when printin to PDF
+    # First, it takes a short time to create the PDF file file address in the 
+    # directory. Initially this will be a file with 0 bytes.
+    # Second, it can take minutes for a big file to print. When done it will have > 0 bytes.
+
+    # Check file has been created
+    seconds = 0
+    timeLimit = 10 # maximum printing time in seconds. Abort if longer.
+    while not Path(sourceFileName).is_file(): 
+      time.sleep(1)
+      seconds += 1
+      #  Abort if taking longer than timeLimit seconds to print
+      if seconds == timeLimit:
+        raise SystemExit("File " + sourceFileName + " has taken more than " + timeLimit + " to be created.  The program will abort.")
+    else:
+      print('Waited {} seconds for file {} to be created'.format(seconds, sourceFileName))
+
     # Check if file already exists in destination path
+    fullPath = Path(destinationPath).joinpath(sourceFileName)
     if Path.is_file(fullPath):
       raise SystemExit("A PDF file with the same name already exists in the destination folder. Program will abort.")
-    else:
-      # Move file
-      shutil.move(sourceFileName, destinationPath)
 
+    # Check file has finished printing before moving.
+    # File size is == 0 until done printing.
+    #time.sleep(1)
+    while os.stat(sourceFileName).st_size == 0:
+      time.sleep(1)
+    has_handle(r'C:\Users\Fernando\Documents\a\Note-a.pdf')
+    while True:
+      try:
+        shutil.move(sourceFileName, destinationPath)
+        break
+      except WindowsError:
+        time.sleep(1)
+
+def has_handle(fpath):
+  for proc in psutil.process_iter():
+    try:
+      for item in proc.open_files():
+        if fpath == item.path:
+          return True
+    except Exception:
+      pass
+  return False
 
 ###########
 # Inputs
@@ -116,5 +153,3 @@ for i in jntPathList:
     pdfFilename = Path(i).stem + "-jnt.pdf"
     pdfDestination = Path(i).parent
     move_pdf(pdfFilename, pdfDestination)
-
-    
