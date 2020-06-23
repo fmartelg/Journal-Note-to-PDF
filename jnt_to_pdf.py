@@ -11,7 +11,8 @@ Convert all .jnt files in a directory (including sub directories,etc) to pdf.
 # DONE: Function that identifies all jnt files in an input directory
 # DONE: Make sure PDF does not already exist before printing, else the
 #       Journal Note prompt to replace will break the program.
-# TODO: Document handle function.
+# DONE: Document handle function.
+# TODO: Refactor the move_pdf function into 3+ functions.
 # TODO: Remove superfluos libraries
 
 ###########
@@ -71,6 +72,25 @@ def print_jnt(inputPath, outputFilename):
                     inputPath, outputFilename])
 
 
+def has_handle(myFilePath):
+  '''
+  Iterates over all running processes and checks if they have myFilePath open.
+  Input:
+  - A full file path
+  Otput:
+  - TRUE if myFilePath is open, FALSE otherwise 
+  '''
+  for proc in psutil.process_iter():
+    try:
+      for item in proc.open_files():
+        if myFilePath == item.path:
+          print("Process {} has {} open".format(proc, myFilePath))
+          return True
+    except Exception:
+      pass
+  return False
+
+
 def move_pdf(sourceFileName, destinationPath):
     """
     Moves the PDF to the location of the Journal Note.  
@@ -80,10 +100,18 @@ def move_pdf(sourceFileName, destinationPath):
     Outputs:
     - None
     """
-    # There are two latencies when printin to PDF
+    # There are three latencies we need to consider when moving pdf 
+    # sequentially after printing:
     # First, it takes a short time to create the PDF file file address in the 
     # directory. Initially this will be a file with 0 bytes.
-    # Second, it can take minutes for a big file to print. When done it will have > 0 bytes.
+    # Second, it can take several minutes for a big file to print. When done it will have > 0 bytes.
+    # Third, even after the file is printed, and displays its correct size, we need to wait for the printing process to let go of the file.
+    # We need to do all these check to avoid race conditions.
+
+    # Check if file already exists in destination path
+    fullPath = Path(destinationPath).joinpath(sourceFileName)
+    if Path.is_file(fullPath):
+      raise SystemExit("A PDF file with the same name already exists in the destination folder. Program will abort.")
 
     # Check file has been created
     seconds = 0
@@ -97,33 +125,17 @@ def move_pdf(sourceFileName, destinationPath):
     else:
       print('Waited {} seconds for file {} to be created'.format(seconds, sourceFileName))
 
-    # Check if file already exists in destination path
-    fullPath = Path(destinationPath).joinpath(sourceFileName)
-    if Path.is_file(fullPath):
-      raise SystemExit("A PDF file with the same name already exists in the destination folder. Program will abort.")
-
-    # Check file has finished printing before moving.
-    # File size is == 0 until done printing.
-    #time.sleep(1)
+    # Check until file has finished printing (i.e. file size > 0).
     while os.stat(sourceFileName).st_size == 0:
       time.sleep(1)
-    has_handle(r'C:\Users\Fernando\Documents\a\Note-a.pdf')
-    while True:
-      try:
-        shutil.move(sourceFileName, destinationPath)
-        break
-      except WindowsError:
-        time.sleep(1)
+    
+    # Check the file no longer has handle on it.
+    sourceFilePath = Path(os.getcwd()).joinpath(sourceFileName)
+    while has_handle(sourceFilePath):
+      time.sleep(1)
+    else:
+      shutil.move(sourceFileName, destinationPath)  
 
-def has_handle(fpath):
-  for proc in psutil.process_iter():
-    try:
-      for item in proc.open_files():
-        if fpath == item.path:
-          return True
-    except Exception:
-      pass
-  return False
 
 ###########
 # Inputs
@@ -146,7 +158,7 @@ for i in jntPathList:
     pdfFilename = "\"" + Path(i).stem + "-jnt.pdf\""
     jntPath = "\"" + i + "\""
 
-    # Print the .jnt file to pdf in default directory
+    # Print the .jnt file to pdf in working directory
     print_jnt(jntPath, pdfFilename)
 
     # Move printed PDF file to location of the source .jnt file.
