@@ -12,14 +12,14 @@ Convert all .jnt files in a directory (including sub directories,etc) to pdf.
 # DONE: Make sure PDF does not already exist before printing, else the
 #       Journal Note prompt to replace will break the program.
 # DONE: Document handle function.
-# TODO: Refactor the move_pdf function into 3+ functions.
+# DONE: Refactor the move_pdf function into 3+ functions.
 # TODO: Remove superfluos libraries
 
 ###########
 # Libraries
 ###########
 
-# from ahk import AHK # ahk run does not allow for passing args
+# from ahk import AHK - not useful bc ahk run does not allow for passing args
 import os
 import time
 import shutil
@@ -31,7 +31,7 @@ import psutil
 # Functions
 ###########
 
-def find_jnt_paths(rootDirectory):
+def find_jnt_paths(myDirectory):
   """
   Searches iteratively in the root directory for all .jnt files.
   Inputs:
@@ -40,28 +40,28 @@ def find_jnt_paths(rootDirectory):
   - A list of full paths to all Journal Note files under root directory. 
   """
   list_jnt_paths = []
-  for root, dirs, files in os.walk(rootDirectory):
+  for root, dirs, files in os.walk(myDirectory):
     for file in files:
         if file.endswith(".jnt"):
              list_jnt_paths.append(os.path.join(root, file))
   return list_jnt_paths
 
 
-def print_jnt(inputPath, outputFilename):
+def print_jnt(fullPath, myFilename):
     """
     Inputs:
-    - A string with the absolute path to a jnt file
-    - A string with the output filename only (excluding path)
+    - A string with the full path to a jnt file
+    - A string with the output filename
     Ouput:
     - A pdf printout of the file, saved in the location where the
     user last printed from JournalNote to PDF manually.  Assumes it is
     the working directory where this program is saved.
     """
-    # Remove double quotes in outputFilename
-    temp = Path(outputFilename.strip('"'))
+    # Remove double quotes in myFilename
+    temp = Path(myFilename.strip('"'))
     # if the file exists in the working directory prompt user to delete file
     if Path.is_file(temp):
-      userInput = input("File " + outputFilename + " already exists. Do you want to delete it? (y/n)")
+      userInput = input("File " + myFilename + " already exists. Do you want to delete it? (y/n)")
       if userInput == 'y':
         Path.unlink(temp) # Delete file
       elif userInput == 'n':
@@ -69,7 +69,49 @@ def print_jnt(inputPath, outputFilename):
       else:
         raise SystemExit('That was not a valid entry. The program will abort.')
     subprocess.run(['powershell.exe', './jnt_to_pdf.ahk',
-                    inputPath, outputFilename])
+                    fullPath, myFilename])
+
+
+def check_pdf_duplicate(myFilename, destinationPath):
+  '''
+  Check if file already exists in destination directory
+  Inputs:
+  - Name of printed PDF file in working directory
+  - Destination filepath
+  Outputs:
+  - None
+  '''
+  fullPath = Path(destinationPath).joinpath(myFilename)
+  if Path.is_file(fullPath):
+    raise SystemExit("A PDF file with the same name already exists in the destination folder. Program will abort.")
+
+
+def wait_pdf_created(myFilename):
+  '''
+  Wait for PDF file to be created during printing of jnt
+  Inputs:
+  - Name of printed PDF file in working directory
+  Outputs:
+  - None
+  '''
+  seconds = 0
+  timeLimit = 10 # maximum printing time in seconds. Abort if longer.
+  while not Path(myFilename).is_file(): 
+    time.sleep(1)
+    seconds += 1
+    #  Abort if taking longer than timeLimit seconds to print
+    if seconds == timeLimit:
+      raise SystemExit("File " + myFilename + " has taken more than " + timeLimit + " to be created.  The program will abort.")
+  else:
+    print('Waited {} seconds for file {} to be created'.format(seconds, myFilename))
+
+
+def wait_file_printed(myFilename):
+  '''
+  Check file has finished printing (i.e. file size > 0).
+  '''
+  while os.stat(myFilename).st_size == 0:
+    time.sleep(1)
 
 
 def has_handle(myFilePath):
@@ -91,52 +133,6 @@ def has_handle(myFilePath):
   return False
 
 
-def move_pdf(sourceFileName, destinationPath):
-    """
-    Moves the PDF to the location of the Journal Note.  
-    Inputs:
-    - Name of printed PDF file located in default printing directory
-    - Destination filepath
-    Outputs:
-    - None
-    """
-    # There are three latencies we need to consider when moving pdf 
-    # sequentially after printing:
-    # First, it takes a short time to create the PDF file file address in the 
-    # directory. Initially this will be a file with 0 bytes.
-    # Second, it can take several minutes for a big file to print. When done it will have > 0 bytes.
-    # Third, even after the file is printed, and displays its correct size, we need to wait for the printing process to let go of the file.
-    # We need to do all these check to avoid race conditions.
-
-    # Check if file already exists in destination path
-    fullPath = Path(destinationPath).joinpath(sourceFileName)
-    if Path.is_file(fullPath):
-      raise SystemExit("A PDF file with the same name already exists in the destination folder. Program will abort.")
-
-    # Check file has been created
-    seconds = 0
-    timeLimit = 10 # maximum printing time in seconds. Abort if longer.
-    while not Path(sourceFileName).is_file(): 
-      time.sleep(1)
-      seconds += 1
-      #  Abort if taking longer than timeLimit seconds to print
-      if seconds == timeLimit:
-        raise SystemExit("File " + sourceFileName + " has taken more than " + timeLimit + " to be created.  The program will abort.")
-    else:
-      print('Waited {} seconds for file {} to be created'.format(seconds, sourceFileName))
-
-    # Check until file has finished printing (i.e. file size > 0).
-    while os.stat(sourceFileName).st_size == 0:
-      time.sleep(1)
-    
-    # Check the file no longer has handle on it.
-    sourceFilePath = Path(os.getcwd()).joinpath(sourceFileName)
-    while has_handle(sourceFilePath):
-      time.sleep(1)
-    else:
-      shutil.move(sourceFileName, destinationPath)  
-
-
 ###########
 # Inputs
 ###########
@@ -152,16 +148,34 @@ jntRoot = "C:\\Users\\Fernando\\Documents\\a"
 # Find all jnt files in the root directory and return them in a list
 jntPathList = find_jnt_paths(jntRoot)
 
-# Loop over the list of jnt file paths
+# Loop over the list of jnt file paths and print each one.
 for i in jntPathList:
-    # Adding double quotes so we can pass paths with spaces to AHK script
-    pdfFilename = "\"" + Path(i).stem + "-jnt.pdf\""
-    jntPath = "\"" + i + "\""
 
-    # Print the .jnt file to pdf in working directory
-    print_jnt(jntPath, pdfFilename)
-
-    # Move printed PDF file to location of the source .jnt file.
+    # Check if file already exists in destination folder.
+    # Abort if so.
     pdfFilename = Path(i).stem + "-jnt.pdf"
     pdfDestination = Path(i).parent
-    move_pdf(pdfFilename, pdfDestination)
+    check_pdf_duplicate(pdfFilename, pdfDestination)
+
+    # Kick off printing process of .jnt file to pdf
+    # Adding double quotes so we can pass paths with spaces to PowerShell
+    strFilename = "\"" + Path(i).stem + "-jnt.pdf\""
+    strPath = "\"" + i + "\""
+    print_jnt(strPath, strFilename)
+
+    # Wait for PDF file to be created
+    # This can take a few seconds
+    wait_pdf_created(pdfFilename)
+
+    # Wait for PDF file to finish printing.  
+    # This can take several minutes, depending on the jnt file. 
+    wait_file_printed(pdfFilename)
+
+    # Wait for printing process to release handle on printed PDF
+    # This can take several seconds.
+    pdfPath = Path(os.getcwd()).joinpath(pdfFilename)
+    while has_handle(pdfPath):
+      time.sleep(1)
+    
+    # Move file
+    shutil.move(pdfFilename, pdfDestination)  
