@@ -13,7 +13,7 @@ Convert all .jnt files in a directory (including sub directories,etc) to pdf.
 #       Journal Note prompt to replace will break the program.
 # DONE: Document handle function.
 # DONE: Refactor the move_pdf function into 3+ functions.
-# TODO: Remove superfluos libraries
+# DONE: Remove superfluos libraries
 
 ###########
 # Libraries
@@ -126,7 +126,6 @@ def has_handle(myFilePath):
     try:
       for item in proc.open_files():
         if myFilePath == item.path:
-          print("Process {} has {} open".format(proc, myFilePath))
           return True
     except Exception:
       pass
@@ -138,7 +137,7 @@ def has_handle(myFilePath):
 ###########
 
 # Enter the root directory that you want to search for journal note files.
-jntRoot = "C:\\Users\\Fernando\\Documents\\a"
+jntRoot = "C:\\Users\\User\\Documents\\myfolder"
 
 
 ###########
