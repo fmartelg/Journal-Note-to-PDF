@@ -24,8 +24,7 @@ I've only run the scripts in the following environment.
 1. Copy the following to a working directory of choice:
    1. `jnt_to_pdf.ahk`
    2. `jnt_to_pdf.py`
-2. Open `jnt_to_pdf.py` and replace the the full path in quotes in the following line with the full path to the directory where your .JNT files are to be found: `python
-jntRoot = "C:\\Users\\User\\Documents\\myfolder"`
+2. Open `jnt_to_pdf.py` and replace the the full path in quotes in the following line with the full path to the directory where your .JNT files are to be found: `jntRoot = "C:\\Users\\User\\Documents\\myfolder"`
 3. Save `jnt_to_pdf.py`
 4. Use Windows Journal to open any .JNT file.  Print it to PDF.  When prompted, select your working directory (were you placed the scripts in Step 1) as the destination for the PDF. Windows Journal will now use this directory as the default print to directory, as required by the scripts.
 5. Run `jnt_to_pdf.py`.
@@ -55,6 +54,16 @@ Please take a look at the script by opening `jnt_to_pdf.ahk`.  Refer to the Auto
 ## Project Status / Contributions
 
 At this point I consider  the project complete. However, if you are reading this and want to contribute some improvements for the benefit of others please DM me on Twitter.  My Twitter handle is: [@fmg_twtr](https://twitter.com/fmg_twtr?lang=en)
+
+## Support the creator
+
+Did the scripts help save you hours of work?
+
+How much is your time worth?
+
+Please consider sharing the love:
+
+<a href="https://www.buymeacoffee.com/fernandomg" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
 
 ## License
 
