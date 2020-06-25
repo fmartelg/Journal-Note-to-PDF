@@ -56,6 +56,16 @@ Please take a look at the script by opening `jnt_to_pdf.ahk`.  Refer to the Auto
 
 At this point I consider  the project complete. However, if you are reading this and want to contribute some improvements for the benefit of others please DM me on Twitter.  My Twitter handle is: [@fmg_twtr](https://twitter.com/fmg_twtr?lang=en)
 
+## Support the creator
+
+Did the scripts help save you hours of work?
+
+How much is your time worth?
+
+Please consider sharing the love:
+
+<a href="https://www.buymeacoffee.com/fernandomg" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
+
 ## License
 
 MIT 2020 Fernando Martel García
